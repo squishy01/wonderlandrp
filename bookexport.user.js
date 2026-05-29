@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Barnes & Noble → Discord Full Export (FIXED HYBRID)
+// @name         Barnes & Noble → Discord Full Export
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Complete BN scraper (header + product table + hydration fix)
