@@ -12,18 +12,38 @@
             justify-content: center;
             align-items: center;
             background-color: black;
+            /* Changes flow to stack items vertically */
+            flex-direction: column; 
+        }
+
+        .container {
+            text-align: center;
         }
 
         img {
             max-width: 100%;
             height: auto;
+            /* Maintaining your specific sizing */
+            width: 35%;
+            height: 35%;
+        }
+
+        a {
+            display: block;
+            margin-top: 20px;
+            color: white; /* Added color so it is visible on black background */
+            text-decoration: none;
+            font-family: sans-serif;
         }
     </style>
 </head>
 <body>
 
-    <img src="join.png" alt="Join" height="35%" width="35%"><br><br>
-    <a href="insta.html">Instagram posts</a>
+    <div class="container">
+        <img src="join.png" alt="Join">
+        <br>
+        <a href="insta.html">Instagram posts</a>
+    </div>
 
 </body>
 </html>
