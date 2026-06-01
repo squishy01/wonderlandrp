@@ -5,31 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post to Discord</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background-color: #fafafa; }
-        .card { background: white; padding: 20px; border: 1px solid #dbdbdb; border-radius: 8px; width: 350px; }
-        input, textarea { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #fafafa; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .form-container { 
+            background: white; 
+            padding: 24px; 
+            border: 1px solid #dbdbdb; 
+            border-radius: 8px; 
+            width: 100%; 
+            max-width: 400px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        h2 { font-size: 18px; margin-top: 0; color: #262626; }
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 12px; 
+            padding: 12px; 
+            border: 1px solid #dbdbdb; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 14px;
+        }
+        button { 
+            width: 100%; 
+            padding: 10px; 
+            background-color: #0095f6; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-weight: 600; 
+            cursor: pointer; 
+        }
         button:hover { background-color: #0081d6; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Create Post</h2>
+<div class="form-container">
+    <h2>New Post</h2>
     <form id="discordForm">
-        <input type="text" id="username" placeholder="Your Username" required>
-        <input type="url" id="imageUrl" placeholder="Image URL (e.g., https://picsum.photos/400)" required>
-        <textarea id="caption" rows="4" placeholder="Write a caption..."></textarea>
-        <button type="submit">Publish to Discord</button>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="url" id="imageUrl" placeholder="Image URL" required>
+        <textarea id="caption" rows="3" placeholder="Write a caption..."></textarea>
+        <button type="submit" id="submitBtn">Share</button>
     </form>
 </div>
 
 <script>
     document.getElementById('discordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sharing...';
 
-        // NOTE: Replace this with your actual Webhook URL
-        const webhookUrl = 'https://discord.com/api/webhooks/1510794519895998626/nLsG-RnwDyNOhR5TAphG7RzDE4uRpOR3Vm1LoFBa14GlTTdlrQ6Awmi_vYs4dkWYRVps';
+        const webhookUrl = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
         
         const payload = {
             username: document.getElementById('username').value,
@@ -37,7 +74,7 @@
                 title: "New Post 📸",
                 description: document.getElementById('caption').value,
                 image: { url: document.getElementById('imageUrl').value },
-                color: 16729344
+                color: 16729344 
             }]
         };
 
@@ -49,14 +86,16 @@
             });
 
             if (response.ok) {
-                alert('Posted to Discord!');
+                alert('Posted successfully!');
                 document.getElementById('discordForm').reset();
             } else {
-                alert('Error sending to Discord.');
+                alert('Failed to post. Check your Webhook URL.');
             }
         } catch (err) {
-            console.error('Error:', err);
-            alert('Failed to connect to the webhook.');
+            alert('Error: Could not connect to Discord.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Share';
         }
     });
 </script>
