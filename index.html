@@ -5,61 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post to Discord</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #fafafa; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .form-container { 
-            background: white; 
-            padding: 24px; 
-            border: 1px solid #dbdbdb; 
-            border-radius: 8px; 
-            width: 100%; 
-            max-width: 400px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        h2 { font-size: 18px; margin-top: 0; color: #262626; }
-        select, input, textarea { 
-            width: 100%; 
-            margin-bottom: 12px; 
-            padding: 12px; 
-            border: 1px solid #dbdbdb; 
-            border-radius: 4px; 
-            box-sizing: border-box; 
-            font-size: 14px;
-        }
-        button { 
-            width: 100%; 
-            padding: 10px; 
-            background-color: #0095f6; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            font-weight: 600; 
-            cursor: pointer; 
-        }
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background-color: #fafafa; }
+        .card { background: white; padding: 20px; border: 1px solid #dbdbdb; border-radius: 8px; width: 350px; }
+        select, input, textarea { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background-color: #0081d6; }
     </style>
 </head>
 <body>
 
-<div class="form-container">
-    <h2>New Post</h2>
+<div class="card">
+    <h2>Create Post</h2>
     <form id="discordForm">
         <select id="username" required>
             <option value="" disabled selected>Select a Username</option>
             <option value="Option 1">Option 1</option>
             <option value="Option 2">Option 2</option>
         </select>
-        
         <input type="url" id="imageUrl" placeholder="Image URL" required>
-        <textarea id="caption" rows="3" placeholder="Write a caption..."></textarea>
-        <button type="submit" id="submitBtn">Share</button>
+        <textarea id="caption" rows="4" placeholder="Write a caption..."></textarea>
+        <button type="submit" id="submitBtn">Publish to Discord</button>
     </form>
 </div>
 
@@ -69,7 +34,7 @@
         
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Sharing...';
+        submitBtn.textContent = 'Publishing...';
 
         const webhookUrl = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
         
@@ -91,16 +56,16 @@
             });
 
             if (response.ok) {
-                alert('Posted successfully!');
+                alert('Posted to Discord!');
                 document.getElementById('discordForm').reset();
             } else {
-                alert('Failed to post. Check your Webhook URL.');
+                alert('Error sending to Discord.');
             }
         } catch (err) {
-            alert('Error: Could not connect to Discord.');
+            alert('Failed to connect to the webhook.');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Share';
+            submitBtn.textContent = 'Publish to Discord';
         }
     });
 </script>
