@@ -24,7 +24,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         h2 { font-size: 18px; margin-top: 0; color: #262626; }
-        input, textarea { 
+        select, input, textarea { 
             width: 100%; 
             margin-bottom: 12px; 
             padding: 12px; 
@@ -51,7 +51,12 @@
 <div class="form-container">
     <h2>New Post</h2>
     <form id="discordForm">
-        <input type="text" id="username" placeholder="Username" required>
+        <select id="username" required>
+            <option value="" disabled selected>Select a Username</option>
+            <option value="Option 1">Option 1</option>
+            <option value="Option 2">Option 2</option>
+        </select>
+        
         <input type="url" id="imageUrl" placeholder="Image URL" required>
         <textarea id="caption" rows="3" placeholder="Write a caption..."></textarea>
         <button type="submit" id="submitBtn">Share</button>
