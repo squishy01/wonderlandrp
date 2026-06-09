@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Poster</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Discord Webhook Poster</h1>
+
+    <input type="text" id="author" placeholder="Author">
+    <input type="text" id="title" placeholder="Title">
+
+    <textarea id="message" placeholder="Paste long message here..."></textarea>
+
+<div style="display:flex;align-items:center;gap:24px;margin-bottom:15px;flex-wrap:wrap;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="showParts" checked style="width:auto;margin:0;flex-shrink:0;">
+        <span>Show "Part X/Y"</span>
+    </label>
+
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="formatOptions" style="width:auto;margin:0;flex-shrink:0;">
+        <span>Format Options</span>
+    </label>
+</div>
+
+<button onclick="sendWebhook()">Send Message</button>
+
+<div id="status"></div>
+
+<script>
+const DISCORD_LIMIT = 1900;
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1513965123184885840/m0C1U9UKz1uMqfElizm4xmFTmd-FADvFoRzBZhGK5yWShpUTisA9Ar0q-ET9rjB5IThp';
+
+function formatRoleplayText(text) {
+    return text.split('\n').map(line => {
+        if (!line.trim()) return '';
+
+        let result = '';
+        let i = 0;
+
+        while (i < line.length) {
+            if (line[i] === '"') {
+                let end = i + 1;
+
+                while (end < line.length && line[end] !== '"') {
+                    end++;
+                }
+
+                const speech = line.slice(i, end + 1);
+                result += `__${speech}__`;
+
+                i = end + 1;
+            } else {
+                let start = i;
+
+                while (i < line.length && line[i] !== '"') {
+                    i++;
+                }
+
+                const normal = line.slice(start, i);
+                result += normal;
+            }
+        }
+
+        return result.replace(/\s+/g, ' ').trim();
+    }).join('\n');
+}
+
+async function sendWebhook() {
+
+    const author = document.getElementById('author').value.trim();
+    const title = document.getElementById('title').value.trim();
+    const body = document.getElementById('message').value.trim();
+    const status = document.getElementById('status');
+
+    const showParts = document.getElementById('showParts').checked;
+    const formatOptions = document.getElementById('formatOptions').checked;
+
+    status.textContent = '';
+
+    if (!author || !title || !body) {
+        alert('Please fill out all fields.');
+        return;
+    }
+
+    let rawBody = body;
+
+    // 🔥 OPTIONAL FORMAT FIRST (CHANGED ORDER)
+    if (formatOptions) {
+        rawBody = formatRoleplayText(rawBody);
+    }
+
+    const paragraphs = rawBody
+        .split(/\n\s*\n/)
+        .map(p => p.trim())
+        .filter(Boolean);
+
+    let chunks = [];
+    let currentChunk = '';
+
+    const firstHeader =
+`**${title}**
+*By ${author}*
+
+`;
+
+    for (let i = 0; i < paragraphs.length; i++) {
+
+        let paragraph = paragraphs[i];
+
+        const header =
+            chunks.length === 0 && currentChunk.length === 0
+                ? firstHeader
+                : '';
+
+        const candidate =
+            currentChunk.length === 0
+                ? header + paragraph
+                : currentChunk + '\n\n' + paragraph;
+
+        if (candidate.length > DISCORD_LIMIT) {
+
+            if (currentChunk.length > 0) {
+                chunks.push(currentChunk);
+            }
+
+            currentChunk = paragraph;
+
+        } else {
+            currentChunk = candidate;
+        }
+    }
+
+    if (currentChunk.length > 0) {
+        chunks.push(currentChunk);
+    }
+
+    try {
+        status.textContent =
+            `Sending ${chunks.length} message(s)...`;
+
+        for (let i = 0; i < chunks.length; i++) {
+
+            let content = chunks[i];
+
+            const finalContent =
+                content +
+                (
+                    chunks.length > 1
+                        ? (
+                            showParts
+                                ? `\n\n*Part ${i + 1}/${chunks.length}*`
+                                : `\n\u200B`
+                        )
+                        : ''
+                );
+
+            console.log(finalContent);
+
+            await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    content: finalContent
+                })
+            });
+
+            status.textContent =
+                `Sent ${i + 1}/${chunks.length}`;
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 750)
+            );
+        }
+
+        status.textContent =
+            `Done! Sent ${chunks.length} message(s).`;
+
+    } catch (error) {
+        console.error(error);
+        status.textContent =
+            `Error: ${error.message}`;
+    }
+}
+</script>
+
+</body>
+</html>
