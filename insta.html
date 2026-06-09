@@ -32,7 +32,16 @@
             <option value="#Fixing_Mistakes">Nolan Carozza</option>
             
         </select>
-        <input type="url" id="imageUrl" placeholder="Image URL" required>
+        <div id="selectedUsername" style="
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #262626;
+    text-align: center;
+    display: none;
+"></div>
+        <input type="url" id="imageUrl" placeholder="Image URL">
+
+<input type="file" id="imageUpload" accept="image/*" style="margin-bottom: 15px;">
         <textarea id="caption" rows="4" placeholder="Write a caption...
             
             Currently Disabled"></textarea>
@@ -41,45 +50,96 @@
 </div>
 
 <script>
+
+ const usernameSelect = document.getElementById('username');
+    const usernameDisplay = document.getElementById('selectedUsername');
+
+    usernameSelect.addEventListener('change', () => {
+        usernameDisplay.textContent = usernameSelect.value;
+        usernameDisplay.style.display = 'block';
+    });
+    
     document.getElementById('discordForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Publishing...';
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Publishing...';
 
-        const webhookUrl = 'https://discord.com/api/webhooks/1510794519895998626/nLsG-RnwDyNOhR5TAphG7RzDE4uRpOR3Vm1LoFBa14GlTTdlrQ6Awmi_vYs4dkWYRVps';
-        
-        const payload = {
-            username: document.getElementById('username').value,
-            embeds: [{
-                title: "New Post 📸",
-                description: document.getElementById('caption').value,
-                image: { url: document.getElementById('imageUrl').value },
-                color: 16729344 
-            }]
-        };
+    const webhookUrl = 'https://discord.com/api/webhooks/YOUR_WEBHOOK';
 
-        try {
-            const response = await fetch(webhookUrl, {
+    try {
+
+        const file = document.getElementById('imageUpload').files[0];
+        let response;
+
+        if (file) {
+
+            // Upload file to Discord
+            const formData = new FormData();
+
+            formData.append(
+                'payload_json',
+                JSON.stringify({
+                    username: document.getElementById('username').value,
+                    embeds: [{
+                        title: "New Post 📸",
+                        description: document.getElementById('caption').value,
+                        image: {
+                            url: `attachment://${file.name}`
+                        },
+                        color: 16729344
+                    }]
+                })
+            );
+
+            formData.append('files[0]', file, file.name);
+
+            response = await fetch(webhookUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData
             });
 
-            if (response.ok) {
-                alert('Posted to Discord!');
-                document.getElementById('discordForm').reset();
-            } else {
-                alert('Error sending to Discord.');
-            }
-        } catch (err) {
-            alert('Failed to connect to the webhook.');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Publish to Discord';
+        } else {
+
+            // Use URL method
+            const payload = {
+                username: document.getElementById('username').value,
+                embeds: [{
+                    title: "New Post 📸",
+                    description: document.getElementById('caption').value,
+                    image: {
+                        url: document.getElementById('imageUrl').value
+                    },
+                    color: 16729344
+                }]
+            };
+
+            response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
         }
-    });
+
+        if (response.ok) {
+            alert('Posted to Discord!');
+            document.getElementById('discordForm').reset();
+            usernameDisplay.style.display = 'none';
+            usernameDisplay.textContent = '';
+        } else {
+            alert('Error sending to Discord.');
+        }
+
+    } catch (err) {
+        alert('Failed to connect to the webhook.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Publish to Discord';
+    }
+});
 </script>
 
 </body>
