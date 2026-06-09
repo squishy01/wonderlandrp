@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post to Discord</title>
+
+<style>
+body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background-color: #fafafa; }
+.card { background: white; padding: 20px; border: 1px solid #dbdbdb; border-radius: 8px; width: 350px; }
+select, input, textarea { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #dbdbdb; border-radius: 4px; box-sizing: border-box; }
+button { width: 100%; padding: 10px; background-color: #0095f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+button:hover { background-color: #0081d6; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<!-- 🔐 LOGIN (ADDED - OPTIONAL GATE) -->
+<div id="loginBox">
+    <h3>Login</h3>
+    <input type="password" id="loginKey" placeholder="Enter access key">
+    <button type="button" id="loginBtn">Login</button>
+</div>
+
+<form id="discordForm" style="display:none;">
+
+<h2>Create Post</h2>
+
+<select id="username" required>
+<option value="" disabled selected>Select a Username</option>
+<option value="#WonderlandRP">Wonderland</option>
+<option value="#wildxfirexblossoms">Effy Carozza</option>
+<option value="#scouts_honor">Scout Morgan</option>
+<option value="#dont_cry_wolf">Syn Corvin</option>
+<option value="#supernovagirl">RJ Jones-Corvin</option>
+<option value="#drxhotxrod">JD Douglas</option>
+<option value="#amilli_ereasons">Millie Telford</option>
+<option value="#mack_corvin">Mack Corvin</option>
+<option value="#wildflowersandvinyl">Stoney Carozza</option>
+<option value="#Xan_xx">Xander Carozza</option>
+<option value="#Fixing_Mistakes">Nolan Carozza</option>
+</select>
+
+<div id="selectedUsername"></div>
+
+<input type="url" id="imageUrl" placeholder="Image URL (or upload below)">
+<input type="file" id="imageUpload" accept="image/*" style="margin-bottom: 15px;">
+
+<!-- 🆕 EMBED TOGGLE -->
+<label style="display:block; margin-bottom:10px;">
+<input type="checkbox" id="useEmbed" checked>
+Send as Embed (Instagram style)
+</label>
+
+<!-- 🆕 REMOVE IMAGE -->
+<button type="button" id="removeImage">Remove Image</button>
+
+<textarea id="caption" rows="4" placeholder="Write a caption..."></textarea>
+
+<button type="submit" id="submitBtn">Publish to Discord</button>
+
+<!-- 🖼️ LIVE PREVIEW -->
+<div id="preview" style="margin-top:15px; display:none; border:1px solid #ddd; padding:10px; border-radius:8px;">
+    <div id="previewUser" style="font-weight:bold;"></div>
+    <img id="previewImg" style="width:100%; margin-top:10px; border-radius:6px;">
+    <div id="previewCaption" style="margin-top:10px;"></div>
+</div>
+
+</form>
+</div>
+
+<script>
+
+const imageUrl = document.getElementById('imageUrl');
+const imageUpload = document.getElementById('imageUpload');
+const usernameDisplay = document.getElementById('selectedUsername');
+
+const preview = document.getElementById('preview');
+const previewImg = document.getElementById('previewImg');
+const previewCaption = document.getElementById('previewCaption');
+const previewUser = document.getElementById('previewUser');
+
+/* LOGIN */
+document.getElementById('loginBtn').addEventListener('click', () => {
+    const key = document.getElementById('loginKey').value;
+    if (key === "admin123") {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('discordForm').style.display = 'block';
+    } else {
+        alert("Wrong key");
+    }
+});
+
+/* USERNAME DISPLAY */
+document.getElementById('username').addEventListener('change', (e) => {
+    usernameDisplay.textContent = e.target.options[e.target.selectedIndex].text;
+});
+
+/* MUTUAL LOCK */
+imageUrl.addEventListener('input', () => {
+    if (imageUrl.value.trim()) {
+        imageUpload.value = "";
+        imageUpload.disabled = true;
+    } else {
+        imageUpload.disabled = false;
+    }
+});
+
+imageUpload.addEventListener('change', () => {
+    if (imageUpload.files.length > 0) {
+        imageUrl.value = "";
+        imageUrl.disabled = true;
+    } else {
+        imageUrl.disabled = false;
+    }
+});
+
+/* REMOVE IMAGE */
+document.getElementById('removeImage').addEventListener('click', () => {
+    imageUrl.value = "";
+    imageUpload.value = "";
+    imageUrl.disabled = false;
+    imageUpload.disabled = false;
+    preview.style.display = 'none';
+});
+
+/* LIVE PREVIEW */
+function updatePreview() {
+    const file = imageUpload.files[0];
+    const url = imageUrl.value.trim();
+    const caption = document.getElementById('caption').value;
+    const username = document.getElementById('username').selectedOptions[0]?.text;
+
+    if (!file && !url) {
+        preview.style.display = 'none';
+        return;
+    }
+
+    preview.style.display = 'block';
+    previewUser.textContent = username || '';
+
+    if (file) {
+        previewImg.src = URL.createObjectURL(file);
+    } else {
+        previewImg.src = url;
+    }
+
+    previewCaption.textContent = caption;
+}
+
+imageUrl.addEventListener('input', updatePreview);
+imageUpload.addEventListener('change', updatePreview);
+document.getElementById('caption').addEventListener('input', updatePreview);
+document.getElementById('username').addEventListener('change', updatePreview);
+
+/* SUBMIT (YOUR ORIGINAL LOGIC PRESERVED) */
+document.getElementById('discordForm').addEventListener('submit', async (e) => {
+e.preventDefault();
+
+const submitBtn = document.getElementById('submitBtn');
+submitBtn.disabled = true;
+submitBtn.textContent = 'Publishing...';
+
+const webhookUrl = 'YOUR_WEBHOOK';
+
+try {
+
+const file = document.getElementById('imageUpload').files[0];
+const url = document.getElementById('imageUrl').value.trim();
+const useEmbed = document.getElementById('useEmbed').checked;
+
+if (!file && !url) {
+alert("You must provide either an image URL or upload a file.");
+return;
+}
+
+let response;
+
+if (file) {
+
+const formData = new FormData();
+
+formData.append(
+'payload_json',
+JSON.stringify({
+username: document.getElementById('username').value,
+embeds: useEmbed ? [{
+title: "New Post 📸",
+description: document.getElementById('caption').value,
+image: { url: `attachment://${file.name}` },
+color: 16729344
+}] : undefined,
+content: !useEmbed ? document.getElementById('caption').value : undefined
+})
+);
+
+formData.append('files[0]', file, file.name);
+
+response = await fetch(webhookUrl, {
+method: 'POST',
+body: formData
+});
+
+} else {
+
+const payload = {
+username: document.getElementById('username').value,
+embeds: useEmbed ? [{
+title: "New Post 📸",
+description: document.getElementById('caption').value,
+image: { url: url },
+color: 16729344
+}] : undefined,
+content: !useEmbed ? document.getElementById('caption').value : undefined
+};
+
+response = await fetch(webhookUrl, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(payload)
+});
+}
+
+if (response.ok) {
+submitBtn.textContent = 'Posted ✔';
+setTimeout(() => submitBtn.textContent = 'Publish to Discord', 1500);
+document.getElementById('discordForm').reset();
+imageUrl.disabled = false;
+imageUpload.disabled = false;
+preview.style.display = 'none';
+usernameDisplay.textContent = '';
+} else {
+alert('Error sending to Discord.');
+}
+
+} catch (err) {
+alert('Failed to connect to webhook.');
+}
+
+});
+</script>
+
+</body>
+</html>
