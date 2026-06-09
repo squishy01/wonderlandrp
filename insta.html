@@ -39,9 +39,9 @@
     text-align: center;
     display: none;
 "></div>
-        <input type="url" id="imageUrl" placeholder="Image URL">
-
+       <input type="url" id="imageUrl" placeholder="Image URL (or upload below)">
 <input type="file" id="imageUpload" accept="image/*" style="margin-bottom: 15px;">
+
         <textarea id="caption" rows="4" placeholder="Write a caption...
             
             Currently Disabled"></textarea>
@@ -51,13 +51,31 @@
 
 <script>
 
- const usernameSelect = document.getElementById('username');
-    const usernameDisplay = document.getElementById('selectedUsername');
+ const imageUrl = document.getElementById('imageUrl');
+const imageUpload = document.getElementById('imageUpload');
+const usernameDisplay = document.getElementById('selectedUsername');
+    document.getElementById('username').addEventListener('change', (e) => {
+    usernameDisplay.textContent = e.target.options[e.target.selectedIndex].text;
+    usernameDisplay.style.display = 'block';
+});
 
-    usernameSelect.addEventListener('change', () => {
-        usernameDisplay.textContent = usernameSelect.value;
-        usernameDisplay.style.display = 'block';
-    });
+imageUrl.addEventListener('input', () => {
+    if (imageUrl.value.trim()) {
+        imageUpload.value = "";
+        imageUpload.disabled = true;
+    } else {
+        imageUpload.disabled = false;
+    }
+});
+
+imageUpload.addEventListener('change', () => {
+    if (imageUpload.files.length > 0) {
+        imageUrl.value = "";
+        imageUrl.disabled = true;
+    } else {
+        imageUrl.disabled = false;
+    }
+});
     
     document.getElementById('discordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -70,75 +88,84 @@
 
     try {
 
-        const file = document.getElementById('imageUpload').files[0];
-        let response;
+    const file = document.getElementById('imageUpload').files[0];
+const url = document.getElementById('imageUrl').value.trim();
+        
+   if (!file && !url) {
+    alert("You must provide either an image URL or upload a file.");
+    return;
+}
 
-        if (file) {
+    let response;
 
-            // Upload file to Discord
-            const formData = new FormData();
+    if (file) {
 
-            formData.append(
-                'payload_json',
-                JSON.stringify({
-                    username: document.getElementById('username').value,
-                    embeds: [{
-                        title: "New Post 📸",
-                        description: document.getElementById('caption').value,
-                        image: {
-                            url: `attachment://${file.name}`
-                        },
-                        color: 16729344
-                    }]
-                })
-            );
+        // Upload file to Discord
+        const formData = new FormData();
 
-            formData.append('files[0]', file, file.name);
-
-            response = await fetch(webhookUrl, {
-                method: 'POST',
-                body: formData
-            });
-
-        } else {
-
-            // Use URL method
-            const payload = {
+        formData.append(
+            'payload_json',
+            JSON.stringify({
                 username: document.getElementById('username').value,
                 embeds: [{
                     title: "New Post 📸",
                     description: document.getElementById('caption').value,
                     image: {
-                        url: document.getElementById('imageUrl').value
+                        url: `attachment://${file.name}`
                     },
                     color: 16729344
                 }]
-            };
+            })
+        );
 
-            response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+        formData.append('files[0]', file, file.name);
+
+        response = await fetch(webhookUrl, {
+            method: 'POST',
+            body: formData
+        });
+
+    } else {
+
+        // Use URL method
+        const payload = {
+            username: document.getElementById('username').value,
+            embeds: [{
+                title: "New Post 📸",
+                description: document.getElementById('caption').value,
+                image: {
+                    url: url
                 },
-                body: JSON.stringify(payload)
-            });
-        }
+                color: 16729344
+            }]
+        };
 
-        if (response.ok) {
-            alert('Posted to Discord!');
-            document.getElementById('discordForm').reset();
-            usernameDisplay.style.display = 'none';
-            usernameDisplay.textContent = '';
-        } else {
-            alert('Error sending to Discord.');
-        }
-
-    } catch (err) {
-        alert('Failed to connect to the webhook.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Publish to Discord';
+        response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
     }
+
+    if (response.ok) {
+        submitBtn.textContent = 'Posted ✔';
+setTimeout(() => {
+    submitBtn.textContent = 'Publish to Discord';
+}, 1500);
+        document.getElementById('discordForm').reset();
+        imageUrl.disabled = false;
+        imageUpload.disabled = false;
+        usernameDisplay.style.display = 'none';
+        usernameDisplay.textContent = '';
+    } else {
+        alert('Error sending to Discord.');
+    }
+
+} catch (err) {
+    alert('Failed to connect to the webhook.');
+}
 });
 </script>
 
