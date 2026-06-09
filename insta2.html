@@ -96,7 +96,8 @@ document.getElementById('loginBtn').addEventListener('click', () => {
 
 /* USERNAME DISPLAY */
 document.getElementById('username').addEventListener('change', (e) => {
-    usernameDisplay.textContent = e.target.options[e.target.selectedIndex].text;
+    usernameDisplay.textContent = e.target.value; // <-- keeps #handle
+    usernameDisplay.style.display = 'block';
 });
 
 /* MUTUAL LOCK */
