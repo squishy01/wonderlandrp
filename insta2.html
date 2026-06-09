@@ -169,88 +169,79 @@ document.getElementById('username').addEventListener('change', updatePreview);
 
 /* SUBMIT (YOUR ORIGINAL LOGIC PRESERVED) */
 document.getElementById('discordForm').addEventListener('submit', async (e) => {
-e.preventDefault();
+    e.preventDefault();
 
-const submitBtn = document.getElementById('submitBtn');
-submitBtn.disabled = true;
-submitBtn.textContent = 'Publishing...';
+    const submitBtn = document.getElementById('submitBtn');
 
-const webhookUrl = 'https://discord.com/api/webhooks/1513787925270364241/yoZQKSxSGubZzefuWzO6J5eBYWEQe-v409Iw1bl4K2fcwon_uilS4Q6e5oLvQcYOAcMy';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Publishing...';
 
-try {
+    const webhookUrl = 'YOUR_WEBHOOK';
 
-const file = document.getElementById('imageUpload').files[0];
-const url = document.getElementById('imageUrl').value.trim();
-const useEmbed = document.getElementById('useEmbed').checked;
+    try {
+        const file = document.getElementById('imageUpload').files[0];
+        const url = document.getElementById('imageUrl').value.trim();
 
-if (!file && !url) {
-alert("You must provide either an image URL or upload a file.");
-return;
-}
+        if (!file && !url) {
+            alert("You must provide an image.");
+            return;
+        }
 
-let response;
+        let response;
 
-if (file) {
+        if (file) {
+            const formData = new FormData();
 
-const formData = new FormData();
+            formData.append(
+                'payload_json',
+                JSON.stringify({
+                    username: document.getElementById('username').value,
+                    embeds: [{
+                        title: "New Post 📸",
+                        description: document.getElementById('caption').value,
+                        image: { url: `attachment://${file.name}` },
+                        color: 16729344
+                    }]
+                })
+            );
 
-formData.append(
-'payload_json',
-JSON.stringify({
-username: document.getElementById('username').value,
-embeds: useEmbed ? [{
-title: "New Post 📸",
-description: document.getElementById('caption').value,
-image: { url: `attachment://${file.name}` },
-color: 16729344
-}] : undefined,
-content: !useEmbed ? document.getElementById('caption').value : undefined
-})
-);
+            formData.append('files[0]', file, file.name);
 
-formData.append('files[0]', file, file.name);
+            response = await fetch(webhookUrl, {
+                method: 'POST',
+                body: formData
+            });
 
-response = await fetch(webhookUrl, {
-method: 'POST',
-body: formData
-});
+        } else {
+            response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    embeds: [{
+                        title: "New Post 📸",
+                        description: document.getElementById('caption').value,
+                        image: { url },
+                        color: 16729344
+                    }]
+                })
+            });
+        }
 
-} else {
+        if (!response.ok) {
+            alert('Error sending to Discord.');
+        } else {
+            document.getElementById('discordForm').reset();
+            usernameDisplay.style.display = 'none';
+        }
 
-const payload = {
-username: document.getElementById('username').value,
-embeds: useEmbed ? [{
-title: "New Post 📸",
-description: document.getElementById('caption').value,
-image: { url: url },
-color: 16729344
-}] : undefined,
-content: !useEmbed ? document.getElementById('caption').value : undefined
-};
-
-response = await fetch(webhookUrl, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify(payload)
-});
-}
-
-if (response.ok) {
-submitBtn.textContent = 'Posted ✔';
-setTimeout(() => submitBtn.textContent = 'Publish to Discord', 1500);
-document.getElementById('discordForm').reset();
-imageUrl.disabled = false;
-imageUpload.disabled = false;
-preview.style.display = 'none';
-usernameDisplay.textContent = '';
-} else {
-alert('Error sending to Discord.');
-}
-
-} catch (err) {
-alert('Failed to connect to webhook.');
-}
-
+    } catch (err) {
+        alert('Failed to connect to webhook.');
+    } finally {
+        // ALWAYS runs no matter what
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Publish to Discord';
+    }
 });
 </script>
 
